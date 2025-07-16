@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Contact Filtering</title>
+    <script src="https://cdn.freshdev.io/assets/app-client@2.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .contacts-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .contacts-grid {
+            display: grid;
+            gap: 12px;
+            padding: 10px;
+        }
+
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .contact-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e1e5e9;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .contact-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .contact-name-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .contact-detail {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .detail-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .contact-detail:last-child {
+            margin-bottom: 0;
+        }
+
+        .email-role-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 12px;
+            min-height: 30px;
+        }
+
+        .email-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #555;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .icon {
+            font-size: 1rem;
+            width: 18px;
+            text-align: center;
+            color: #666;
+        }
+
+        .contact-footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .school-text {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .contact-id {
+            color: #666;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .contact-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #2196F3, #21CBF3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .contact-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Disable hover effect for ticket requester cards */
+        .contact-card.ticket-requester::before {
+            display: none;
+        }
+
+        /* Ticket Requester Highlighting */
+        .contact-card.ticket-requester {
+            border: 2px solid #4caf50;
+            background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+            box-shadow: 0 2px 12px rgba(76, 175, 80, 0.15);
+            position: relative;
+            overflow: visible;
+        }
+
+        .ticket-requester-badge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #2e7d32;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 8px 0 8px 0;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 4px rgba(46, 125, 50, 0.4);
+            z-index: 10;
+            transform: translateX(-1px) translateY(-1px);
+        }
+
+        .contact-card.ticket-requester .contact-name {
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        .contact-card.ticket-requester .contact-header {
+            padding-top: 20px;
+        }
+
+        /* Sentiment positioned in the top right corner */
+        .contact-sentiment-corner {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 1.5rem;
+            z-index: 10;
+        }
+
+        /* Sentiment placeholder styling */
+        .sentiment-placeholder {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sentiment-placeholder .sentiment-emoji {
+            color: #bbb;
+            font-style: normal;
+            margin-right: 10px;
+        }
+
+        .sentiment-emoji {
+            transition: transform 0.2s ease;
+            display: inline-block;
+        }
+
+        .sentiment-placeholder-img {
+            width: 40px;
+            height: 40px;
+            opacity: 1;
+            filter: grayscale(100%) brightness(1.2);
+            vertical-align: middle;
+            display: inline-block;
+            transition: opacity 0.2s ease;
+            margin-right: 20px;
+        }
+
+        .contact-sentiment:hover .sentiment-placeholder-img {
+            opacity: 0.8;
+        }
+
+        .contact-card:hover .sentiment-placeholder-text {
+            color: #777;
+        }
+
+        .sentiment-placeholder-text {
+            font-size: 0.75rem;
+            color: #999;
+            font-weight: 400;
+            white-space: nowrap;
+            font-style: italic;
+            padding-right: 4px;
+        }
+
+        .contact-sentiment {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            min-width: 30px;
+        }
+
+        .contact-sentiment:not(.sentiment-placeholder):hover .sentiment-emoji {
+            transform: scale(1.1);
+        }
+
+        /* Sentiment colors for actual ratings */
+        .sentiment-positive {
+            color: #4caf50;
+        }
+
+        .sentiment-negative {
+            color: #f44336;
+        }
+
+        .sentiment-neutral {
+            color: #ff9800;
+        }
+
+        /* Copy Emails Button Styling */
+        .copy-emails-container {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
+            padding: 0 20px;
+        }
+
+        .copy-emails-btn {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: none;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .copy-emails-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .copy-emails-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .copy-emails-btn:hover {
+            background: linear-gradient(135deg, #45a049, #388e3c);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.5);
+        }
+
+        .copy-emails-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+        }
+
+        .copy-emails-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .contact-card.ticket-requester .role-badge-corner {
+            top: 28px;
+            right: 16px;
+        }
+
+        .contacts-table {
+            background: transparent;
+            border-radius: 0;
+            overflow: visible;
+            box-shadow: none;
+            border: none;
+        }
+
+        .contacts-table-header {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            padding: 0;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .contacts-table-row {
+            display: grid;
+            grid-template-columns: 50px 2fr 2fr 1.5fr 1fr 1fr 80px;
+            gap: 16px;
+            align-items: center;
+            padding: 16px;
+            border-bottom: none;
+            transition: none;
+        }
+
+        .contacts-table-row:hover {
+            background: transparent;
+        }
+
+        .contacts-table-row.header {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0;
+        }
+
+        .contacts-table-row.header:hover {
+            background: #f8f9fa;
+        }
+
+        .contact-icon {
+            font-size: 1.4rem;
+            text-align: center;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .contact-card:hover .contact-icon {
+            background: #e3f2fd;
+            transform: scale(1.1);
+        }
+
+        .contact-card.ticket-requester .contact-icon {
+            background: #e8f5e8;
+        }
+
+        .contact-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .contact-email {
+            color: #1976d2;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .contact-email:hover {
+            background: #e3f2fd;
+            color: #1565c0;
+            transform: translateY(-1px);
+        }
+
+        .contact-updated {
+            color: #666;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .contact-school {
+            color: #666;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .contact-id-cell {
+            color: #1976d2;
+            font-size: 0.8rem;
+            text-decoration: none;
+            cursor: pointer;
+            background: #e3f2fd;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .contact-id-cell:hover {
+            background: #bbdefb;
+            transform: translateY(-1px);
+        }
+
+        .contact-id-cell a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .contact-sentiment-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196F3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .stats-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .contact-link {
+            color: #1976d2;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .contact-link:hover {
+            color: #1565c0;
+            text-decoration: underline;
+        }
+
+        .clickable-email {
+            color: #1976d2;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .clickable-email:hover {
+            color: #1565c0;
+            text-decoration: underline;
+        }
+
+        .custom-field {
+            background: #f3e5f5;
+            color: #6a1b9a;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .date-field {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .rating-field {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .filters-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 220px;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .filter-group-header {
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .dropdown-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .dropdown-button {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            color: #333;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dropdown-button:hover {
+            border-color: #bbb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-button.open {
+            border-color: #2196F3;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+        }
+
+        .dropdown-arrow {
+            transition: transform 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        .dropdown-arrow.rotated {
+            transform: rotate(180deg);
+        }
+
+        .filter-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-options.open {
+            display: block;
+        }
+
+        .dropdown-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            outline: none;
+            background: #f9f9f9;
+            box-sizing: border-box;
+        }
+
+        .dropdown-search:focus {
+            background: white;
+            border-bottom-color: #2196F3;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .filter-option:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #555;
+            flex: 1;
+            margin: 0;
+        }
+
+        .filter-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-width: 150px;
+            margin-left: auto;
+        }
+
+        .clear-filters-btn {
+            padding: 12px 20px;
+            background: #12344d;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffffff;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .clear-filters-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+            color: #343a40;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .selected-filters {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .selected-count {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .role-badge {
+            background: #12344d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(76, 175, 80, 0.3);
+        }
+
+        .role-badge-corner {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #12344d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(76, 175, 80, 0.3);
+            z-index: 10;
+        }
+
+        .role-badge-corner.rostering-contact {
+            background: #12344d;
+            color: white;
+            box-shadow: 0 1px 3px rgba(255, 152, 0, 0.3);
+        }
+
+        .role-badge.rostering-contact {
+            background: #12344d;
+            color: white;
+            box-shadow: 0 1px 3px rgba(255, 152, 0, 0.3);
+        }
+
+        /* Contact Sentiment Styling */
+        .contact-sentiment {
+            display: inline-flex;
+            align-items: center;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-sentiment .sentiment-emoji {
+            font-size: 1.3rem;
+            margin-right: 40px;
+        }
+
+        .updated-sentiment-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+
+        .updated-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #555;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .sentiment-description {
+            background: #f0f0f0;
+            color: #555;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .sentiment-description.sentiment-positive {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .sentiment-description.sentiment-negative {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .sentiment-description.sentiment-neutral {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Advanced Contact Search</h1>
+    </div>
+
+    <div id="filtersSection" style="display: none;">
+        <div class="filters-container">
+            <div class="filter-group" style="display: none;">
+                <div class="filter-group-header">Filter by Company (District):</div>
+                <div class="dropdown-container">
+                    <div class="dropdown-button" onclick="toggleDropdown('companyFilterOptions')"
+                        id="companyDropdownButton">
+                        <span id="companyDropdownText">All Companies</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="filter-options" id="companyFilterOptions">
+                        <!-- Company checkboxes will be populated here -->
+                    </div>
+                </div>
+                <div class="selected-filters" id="companySelectedCount"></div>
+            </div>
+            <div class="filter-group">
+                <div class="filter-group-header">Filter by Role:</div>
+                <div class="dropdown-container">
+                    <div class="dropdown-button" onclick="toggleDropdown('roleFilterOptions')" id="roleDropdownButton">
+                        <span id="roleDropdownText">All Roles</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="filter-options" id="roleFilterOptions">
+                        <input type="text" class="dropdown-search" id="roleSearch" placeholder="Search roles..."
+                            onclick="event.stopPropagation()"
+                            oninput="filterDropdownOptions('roleFilterOptions', 'roleSearch')">
+                        <div id="roleFilterList">
+                            <!-- Role checkboxes will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="selected-filters" id="roleSelectedCount"></div>
+            </div>
+            <div class="filter-group">
+                <div class="filter-group-header">Filter by School:</div>
+                <div class="dropdown-container">
+                    <div class="dropdown-button" onclick="toggleDropdown('schoolFilterOptions')"
+                        id="schoolDropdownButton">
+                        <span id="schoolDropdownText">All Schools</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="filter-options" id="schoolFilterOptions">
+                        <input type="text" class="dropdown-search" id="schoolSearch" placeholder="Search schools..."
+                            onclick="event.stopPropagation()"
+                            oninput="filterDropdownOptions('schoolFilterOptions', 'schoolSearch')">
+                        <div id="schoolFilterList">
+                            <!-- School checkboxes will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="selected-filters" id="schoolSelectedCount"></div>
+            </div>
+        </div>
+    </div>
+    <div class="filter-actions">
+        <button onclick="clearFilters()" class="clear-filters-btn">Clear All Filters</button>
+    </div>
+    <br>
+    <div id="contactsContent">
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading contacts...</p>
+        </div>
+    </div>
+
+    <script>
+        let client;
+
+        (async function init() {
+            try {
+                client = await app.initialized();
+                loadContacts();
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                showError('Failed to initialize app');
+            }
+        })();
+
+        async function loadContacts() {
+            try {
+                // Get parent context to access contacts data
+                const context = await client.instance.context();
+                console.log('Modal context:', context);
+
+                // Try to get company ID and requester ID from ticket context
+                let companyId = null;
+                let requesterId = null;
+                try {
+                    const ticketData = await client.data.get('ticket');
+                    companyId = ticketData?.ticket?.company_id || null;
+                    requesterId = ticketData?.ticket?.requester_id || null;
+                    currentTicketCompanyId = companyId;
+                    currentTicketRequesterId = requesterId;
+                    console.log("Company ID from ticket context:", companyId);
+                    console.log("Requester ID from ticket context:", requesterId);
+                } catch (error) {
+                    console.log("No ticket context available in modal:", error);
+                }
+
+                // Fetch contacts for the specific company (or all contacts if no company ID)
+                console.log("Fetching contacts for company ID:", companyId);
+                const contacts = await fetchAllContacts(companyId);
+
+                // Fetch companies for the company filter
+                await fetchCompanies();
+
+                displayContacts(contacts, companyId);
+
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                showError('Error loading contacts: ' + error.message);
+            }
+        }
+
+        async function fetchAllContacts(companyId) {
+            let allContacts = [];
+            let page = 1;
+            const perPage = 100; // Increased to fetch 100 results per page
+            let hasMorePages = true;
+
+            console.log('Starting to fetch contacts...');
+            if (companyId) {
+                console.log(`Fetching contacts for company ID: ${companyId}`);
+            } else {
+                console.log('No company ID provided - fetching all contacts');
+            }
+
+            while (hasMorePages) {
+                try {
+                    console.log(`Fetching page ${page}...`);
+
+                    // Update loading message to show pagination progress
+                    const loadingMessage = companyId
+                        ? `Loading company contacts... (Page ${page})`
+                        : `Loading all contacts... (Page ${page})`;
+                    updateLoadingMessage(loadingMessage);
+
+                    const queryParams = companyId
+                        ? {
+                            "company_id": companyId,
+                            "per_page": perPage,
+                            "page": page
+                        }
+                        : {
+                            "per_page": perPage,
+                            "page": page
+                        };
+
+                    const contactsResponse = await client.request.invokeTemplate("getCompanyContacts", {
+                        "context": {},
+                        "query": queryParams
+                    });
+
+                    if (contactsResponse?.response) {
+                        const pageContacts = JSON.parse(contactsResponse.response);
+
+                        if (pageContacts && pageContacts.length > 0) {
+                            allContacts = allContacts.concat(pageContacts);
+                            console.log(`Page ${page}: Found ${pageContacts.length} contacts (Total: ${allContacts.length})`);
+
+                            // Debug: Log sample contact data structure
+                            if (page === 1) {
+                                console.log('Sample contact data structure:', pageContacts[0]);
+                            }
+
+                            // If we got fewer contacts than per_page, we've reached the end
+                            if (pageContacts.length < perPage) {
+                                hasMorePages = false;
+                                console.log('Reached the last page (fewer contacts than per_page limit)');
+                            } else {
+                                page++;
+                            }
+                        } else {
+                            // No contacts returned, we've reached the end
+                            hasMorePages = false;
+                            console.log('No more contacts found');
+                        }
+                    } else {
+                        // No response data, assume we've reached the end
+                        hasMorePages = false;
+                        console.log('No response data, ending pagination');
+                    }
+
+                    // Add a small delay to prevent overwhelming the API
+                    if (hasMorePages) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+
+                } catch (error) {
+                    console.error(`Error fetching page ${page}:`, error);
+                    hasMorePages = false; // Stop pagination on error
+                }
+            }
+
+            console.log(`Pagination complete. Total contacts fetched: ${allContacts.length}`);
+            return allContacts;
+        }
+
+        async function fetchCompanies() {
+            try {
+                // Extract unique companies from contacts and try to get company names from contact data
+                const companyIds = [...new Set(allContacts
+                    .map(contact => contact.company_id)
+                    .filter(id => id))];
+
+                allCompanies = [];
+
+                // First, try to get unique company names from contact data (if available)
+                const companiesFromContacts = {};
+                allContacts.forEach(contact => {
+                    if (contact.company_id) {
+                        if (!companiesFromContacts[contact.company_id]) {
+                            companiesFromContacts[contact.company_id] = {
+                                id: contact.company_id,
+                                name: contact.company?.name || `Company ${contact.company_id}`,
+                                domains: contact.company?.domains || []
+                            };
+                        }
+                    }
+                });
+
+                // Try to fetch company details from API for better names
+                for (const companyId of companyIds) {
+                    try {
+                        const companyResponse = await client.request.invokeTemplate("getCompanyDetails", {
+                            "context": { "company_id": companyId },
+                            "query": {}
+                        });
+
+                        if (companyResponse?.response) {
+                            const company = JSON.parse(companyResponse.response);
+                            allCompanies.push(company);
+                        } else {
+                            // Use fallback from contact data
+                            allCompanies.push(companiesFromContacts[companyId] || {
+                                id: companyId,
+                                name: `Company ${companyId}`,
+                                domains: []
+                            });
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to fetch company ${companyId}:`, error);
+                        // Use fallback from contact data
+                        allCompanies.push(companiesFromContacts[companyId] || {
+                            id: companyId,
+                            name: `Company ${companyId}`,
+                            domains: []
+                        });
+                    }
+                }
+
+                console.log(`Fetched ${allCompanies.length} companies`);
+            } catch (error) {
+                console.error('Error fetching companies:', error);
+                // Final fallback: create basic companies from contact data
+                const companyIds = [...new Set(allContacts
+                    .map(contact => contact.company_id)
+                    .filter(id => id))];
+
+                allCompanies = companyIds.map(id => ({
+                    id: id,
+                    name: `Company ${id}`,
+                    domains: []
+                }));
+            }
+        }
+
+        function updateLoadingMessage(message) {
+            const contentDiv = document.getElementById('contactsContent');
+            contentDiv.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        let allContacts = [];
+        let filteredContacts = [];
+        let allCompanies = [];
+        let currentTicketCompanyId = null;
+        let currentTicketRequesterId = null;
+
+        function displayContacts(contacts, companyId) {
+            allContacts = contacts || [];
+
+            // Sort allContacts to ensure ticket requester appears first globally
+            if (currentTicketRequesterId && allContacts.length > 0) {
+                allContacts.sort((a, b) => {
+                    const aIsRequester = parseInt(a.id) === parseInt(currentTicketRequesterId);
+                    const bIsRequester = parseInt(b.id) === parseInt(currentTicketRequesterId);
+
+                    if (aIsRequester && !bIsRequester) return -1;
+                    if (!aIsRequester && bIsRequester) return 1;
+
+                    // Secondary sort by name if neither/both are requesters
+                    return (a.name || '').localeCompare(b.name || '');
+                });
+            }
+
+            filteredContacts = allContacts;
+
+            const contentDiv = document.getElementById('contactsContent');
+            const filtersSection = document.getElementById('filtersSection');
+
+            if (!contacts || contacts.length === 0) {
+                filtersSection.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">👥</div>
+                        <h3>No Contacts Found</h3>
+                        <p>${companyId ? 'This company has no contacts yet.' : 'No contacts available to display.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show filters and populate filter options
+            filtersSection.style.display = 'block';
+            populateFilterOptions();
+
+            renderContactsList(companyId);
+        }
+
+        function renderContactsList(companyId) {
+            const contentDiv = document.getElementById('contactsContent');
+            let contactsToShow = [...filteredContacts]; // Create a copy to sort
+
+            // Sort contacts to ensure ticket requester appears first
+            if (currentTicketRequesterId) {
+                contactsToShow.sort((a, b) => {
+                    const aIsRequester = parseInt(a.id) === parseInt(currentTicketRequesterId);
+                    const bIsRequester = parseInt(b.id) === parseInt(currentTicketRequesterId);
+
+                    if (aIsRequester && !bIsRequester) return -1; // a (requester) comes first
+                    if (!aIsRequester && bIsRequester) return 1;  // b (requester) comes first
+
+                    // If neither or both are requesters, maintain original order
+                    return 0;
+                });
+            }
+
+            // Check if ticket requester is in the filtered results
+            const requesterInResults = currentTicketRequesterId && contactsToShow.some(contact =>
+                parseInt(contact.id) === parseInt(currentTicketRequesterId)
+            );
+
+            // Show different stats based on filtering
+            let statsText;
+            if (filteredContacts.length !== allContacts.length) {
+                // Filtering is active
+                statsText = `Showing ${contactsToShow.length} of ${allContacts.length} contact${allContacts.length !== 1 ? 's' : ''}`;
+            } else {
+                // No filtering, show all contacts
+                statsText = companyId
+                    ? `Found ${contactsToShow.length} contact${contactsToShow.length !== 1 ? 's' : ''} for this company`
+                    : `Showing ${contactsToShow.length} contact${contactsToShow.length !== 1 ? 's' : ''}`;
+            }
+
+            // Add requester info to stats if found
+            if (requesterInResults) {
+                statsText += ` • 🎫 Ticket requester included`;
+            } else if (currentTicketRequesterId && allContacts.length > 0) {
+                statsText += ` • 🎫 Ticket requester not in current results`;
+            }
+
+            if (contactsToShow.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="stats-bar">
+                        ${statsText}
+                    </div>
+                    <div class="empty-state">
+                        <div class="icon">👥</div>
+                        <h3>No Contacts Found</h3>
+                        <p>No contacts match the current filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Check if there are any Rostering Contacts or Primary Tech contacts
+            const hasSpecialRoles = contactsToShow.some(contact => {
+                const role = contact.custom_fields?.role || '';
+                const roleLower = role.toLowerCase();
+                return roleLower.includes('rostering contact') || roleLower.includes('primary tech');
+            });
+
+            contentDiv.innerHTML = `
+                <div class="stats-bar">
+                    ${statsText}
+                </div>
+                ${hasSpecialRoles ? `
+                    <div class="copy-emails-container">
+                        <button class="copy-emails-btn" onclick="copySpecialRoleEmails()" 
+                                title="Copy all Rostering Contact and Primary Tech emails, start a reply, and auto-fill the CC field">
+                            📋 Copy Emails & Start Reply
+                        </button>
+                    </div>
+                ` : ''}
+                <div class="contacts-container">
+                    <div class="contacts-grid">
+                        ${contactsToShow.map(contact => createContactCard(contact)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function populateFilterOptions() {
+            const companyFilterOptions = document.getElementById('companyFilterOptions');
+            const roleFilterList = document.getElementById('roleFilterList');
+            const schoolFilterList = document.getElementById('schoolFilterList');
+
+            // Populate company filter options
+            companyFilterOptions.innerHTML = '';
+            allCompanies.forEach((company, index) => {
+                const optionId = `company_${index}`;
+                const isCurrentTicketCompany = company.id === currentTicketCompanyId;
+                companyFilterOptions.innerHTML += `
+                    <div class="filter-option" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="${optionId}" value="${company.id}" onchange="applyFilters()" ${isCurrentTicketCompany ? 'checked' : ''}>
+                        <label for="${optionId}">${company.name}${isCurrentTicketCompany ? ' (Current Ticket)' : ''}</label>
+                    </div>
+                `;
+            });
+
+            // Get unique roles and schools
+            const roles = [...new Set(allContacts
+                .map(contact => contact.custom_fields?.role)
+                .filter(role => role && role.trim() !== ''))].sort();
+
+            const schools = [...new Set(allContacts
+                .map(contact => contact.custom_fields?.school)
+                .filter(school => school && school.trim() !== ''))].sort();
+
+            // Populate role filter options
+            roleFilterList.innerHTML = '';
+            roles.forEach((role, index) => {
+                const optionId = `role_${index}`;
+                roleFilterList.innerHTML += `
+                    <div class="filter-option" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="${optionId}" value="${role}" onchange="applyFilters()">
+                        <label for="${optionId}">${role}</label>
+                    </div>
+                `;
+            });
+
+            // Populate school filter options
+            schoolFilterList.innerHTML = '';
+            schools.forEach((school, index) => {
+                const optionId = `school_${index}`;
+                schoolFilterList.innerHTML += `
+                    <div class="filter-option" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="${optionId}" value="${school}" onchange="applyFilters()">
+                        <label for="${optionId}">${school}</label>
+                    </div>
+                `;
+            });
+
+            // Initialize selection counters
+            updateFilterCounts();
+
+            // Apply initial filter to show current ticket's company contacts
+            if (currentTicketCompanyId) {
+                applyFilters();
+            }
+        }
+
+        function applyFilters() {
+            // Get selected companies
+            const selectedCompanies = [];
+            document.querySelectorAll('#companyFilterOptions input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedCompanies.push(parseInt(checkbox.value));
+            });
+
+            // Get selected roles
+            const selectedRoles = [];
+            document.querySelectorAll('#roleFilterList input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedRoles.push(checkbox.value);
+            });
+
+            // Get selected schools
+            const selectedSchools = [];
+            document.querySelectorAll('#schoolFilterList input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedSchools.push(checkbox.value);
+            });
+
+            // Filter contacts based on selections
+            filteredContacts = allContacts.filter(contact => {
+                const contactCompanyId = contact.company_id;
+                const contactRole = contact.custom_fields?.role || '';
+                const contactSchool = contact.custom_fields?.school || '';
+
+                // If no companies selected, include all companies; otherwise check if contact company is in selected companies
+                const companyMatch = selectedCompanies.length === 0 || selectedCompanies.includes(contactCompanyId);
+
+                // If no roles selected, include all roles; otherwise check if contact role is in selected roles
+                const roleMatch = selectedRoles.length === 0 || selectedRoles.includes(contactRole);
+
+                // If no schools selected, include all schools; otherwise check if contact school is in selected schools
+                const schoolMatch = selectedSchools.length === 0 || selectedSchools.includes(contactSchool);
+
+                return companyMatch && roleMatch && schoolMatch;
+            });
+
+            // Update filter counts and dropdown text
+            updateFilterCounts();
+            updateDropdownTexts();
+
+            // Use null as companyId since we don't need it for filtering
+            renderContactsList(null);
+        }
+
+        function toggleDropdown(optionsId) {
+            const options = document.getElementById(optionsId);
+            const button = options.previousElementSibling;
+            const arrow = button.querySelector('.dropdown-arrow');
+
+            // Close all other dropdowns first
+            document.querySelectorAll('.filter-options.open').forEach(dropdown => {
+                if (dropdown.id !== optionsId) {
+                    dropdown.classList.remove('open');
+                    dropdown.previousElementSibling.classList.remove('open');
+                    dropdown.previousElementSibling.querySelector('.dropdown-arrow').classList.remove('rotated');
+                }
+            });
+
+            // Toggle current dropdown
+            options.classList.toggle('open');
+            button.classList.toggle('open');
+            arrow.classList.toggle('rotated');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.dropdown-container')) {
+                document.querySelectorAll('.filter-options.open').forEach(dropdown => {
+                    dropdown.classList.remove('open');
+                    dropdown.previousElementSibling.classList.remove('open');
+                    dropdown.previousElementSibling.querySelector('.dropdown-arrow').classList.remove('rotated');
+                });
+            }
+        });
+
+        function clearFilters() {
+            // Uncheck all company checkboxes except current ticket's company
+            document.querySelectorAll('#companyFilterOptions input[type="checkbox"]').forEach(checkbox => {
+                const isCurrentTicketCompany = parseInt(checkbox.value) === currentTicketCompanyId;
+                checkbox.checked = isCurrentTicketCompany;
+            });
+
+            // Uncheck all role checkboxes
+            document.querySelectorAll('#roleFilterList input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            // Uncheck all school checkboxes
+            document.querySelectorAll('#schoolFilterList input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            // Clear search inputs
+            document.getElementById('roleSearch').value = '';
+            document.getElementById('schoolSearch').value = '';
+
+            // Reset dropdown displays
+            filterDropdownOptions('roleFilterOptions', 'roleSearch');
+            filterDropdownOptions('schoolFilterOptions', 'schoolSearch');
+
+            // Apply filters to show current ticket's company contacts
+            applyFilters();
+        }
+
+        function updateFilterCounts() {
+            // Count selected companies
+            const selectedCompanyCount = document.querySelectorAll('#companyFilterOptions input[type="checkbox"]:checked').length;
+            const totalCompanyCount = document.querySelectorAll('#companyFilterOptions input[type="checkbox"]').length;
+            const companyCountText = selectedCompanyCount === 0
+                ? `All companies (${totalCompanyCount})`
+                : `<span class="selected-count">${selectedCompanyCount}</span> of ${totalCompanyCount} selected`;
+            document.getElementById('companySelectedCount').innerHTML = companyCountText;
+
+            // Count selected roles
+            const selectedRoleCount = document.querySelectorAll('#roleFilterList input[type="checkbox"]:checked').length;
+            const totalRoleCount = document.querySelectorAll('#roleFilterList input[type="checkbox"]').length;
+            const roleCountText = selectedRoleCount === 0
+                ? `All roles (${totalRoleCount})`
+                : `<span class="selected-count">${selectedRoleCount}</span> of ${totalRoleCount} selected`;
+            document.getElementById('roleSelectedCount').innerHTML = roleCountText;
+
+            // Count selected schools
+            const selectedSchoolCount = document.querySelectorAll('#schoolFilterList input[type="checkbox"]:checked').length;
+            const totalSchoolCount = document.querySelectorAll('#schoolFilterList input[type="checkbox"]').length;
+            const schoolCountText = selectedSchoolCount === 0
+                ? `All schools (${totalSchoolCount})`
+                : `<span class="selected-count">${selectedSchoolCount}</span> of ${totalSchoolCount} selected`;
+            document.getElementById('schoolSelectedCount').innerHTML = schoolCountText;
+        }
+
+        function updateDropdownTexts() {
+            // Update company dropdown text
+            const selectedCompanyCount = document.querySelectorAll('#companyFilterOptions input[type="checkbox"]:checked').length;
+            const totalCompanyCount = document.querySelectorAll('#companyFilterOptions input[type="checkbox"]').length;
+            const companyText = selectedCompanyCount === 0
+                ? 'All Companies'
+                : selectedCompanyCount === totalCompanyCount
+                    ? 'All Companies'
+                    : `${selectedCompanyCount} Companies`;
+            document.getElementById('companyDropdownText').textContent = companyText;
+
+            // Update role dropdown text
+            const selectedRoleCount = document.querySelectorAll('#roleFilterList input[type="checkbox"]:checked').length;
+            const totalRoleCount = document.querySelectorAll('#roleFilterList input[type="checkbox"]').length;
+            const roleText = selectedRoleCount === 0
+                ? 'All Roles'
+                : selectedRoleCount === totalRoleCount
+                    ? 'All Roles'
+                    : `${selectedRoleCount} Roles`;
+            document.getElementById('roleDropdownText').textContent = roleText;
+
+            // Update school dropdown text
+            const selectedSchoolCount = document.querySelectorAll('#schoolFilterList input[type="checkbox"]:checked').length;
+            const totalSchoolCount = document.querySelectorAll('#schoolFilterList input[type="checkbox"]').length;
+            const schoolText = selectedSchoolCount === 0
+                ? 'All Schools'
+                : selectedSchoolCount === totalSchoolCount
+                    ? 'All Schools'
+                    : `${selectedSchoolCount} Schools`;
+            document.getElementById('schoolDropdownText').textContent = schoolText;
+        }
+
+        // Function to filter dropdown options based on search input
+        function filterDropdownOptions(dropdownId, searchInputId) {
+            const searchTerm = document.getElementById(searchInputId).value.toLowerCase();
+            const dropdown = document.getElementById(dropdownId);
+            const options = dropdown.querySelectorAll('.filter-option');
+
+            options.forEach(option => {
+                const label = option.querySelector('label').textContent.toLowerCase();
+                if (label.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Function to get sentiment emoji and description from CSAT rating
+        function getSentimentFromCSAT(csatRating) {
+            if (!csatRating) return { emoji: '', description: '', isPlaceholder: false };
+
+            const rating = parseInt(csatRating);
+
+            // New Survey Ratings (negative values)
+            if (rating === -103) return { emoji: '😢', description: 'Extremely Unhappy', isPlaceholder: false };
+            if (rating === -102) return { emoji: '😞', description: 'Very Unhappy', isPlaceholder: false };
+            if (rating === -101) return { emoji: '🙁', description: 'Unhappy', isPlaceholder: false };
+
+            // New Survey Ratings (positive values)
+            if (rating === 100) return { emoji: '😐', description: 'Neutral', isPlaceholder: false };
+            if (rating === 101) return { emoji: '🙂', description: 'Happy', isPlaceholder: false };
+            if (rating === 102) return { emoji: '😊', description: 'Very Happy', isPlaceholder: false };
+            if (rating === 103) return { emoji: '😁', description: 'Extremely Happy', isPlaceholder: false };
+
+            // Classic Survey Ratings (1-3 scale)
+            if (rating === 1) return { emoji: '🙂', description: 'Happy', isPlaceholder: false };
+            if (rating === 2) return { emoji: '😐', description: 'Neutral', isPlaceholder: false };
+            if (rating === 3) return { emoji: '🙁', description: 'Unhappy', isPlaceholder: false };
+
+            // Default for unknown ratings
+            return { emoji: '❓', description: 'Unknown Rating', isPlaceholder: false };
+        }
+
+        function createContactCard(contact) {
+            const name = contact.name || 'N/A';
+            const email = contact.email || 'N/A';
+            const id = contact.id || 'N/A';
+            const customFields = contact.custom_fields || {};
+            const updatedAt = contact.updated_at || '';
+            const role = customFields.role || '';
+            const school = customFields.school || '';
+            // Try different possible locations for CSAT rating
+            const csatRating = contact.csat_rating ||
+                contact.satisfaction_rating ||
+                contact.customer_satisfaction_rating ||
+                contact.rating ||
+                (contact.custom_fields && contact.custom_fields.csat_rating) ||
+                (contact.custom_fields && contact.custom_fields.satisfaction_rating);
+
+            // Debug logging for sentiment
+            console.log(`Contact ${name} (ID: ${id}):`, {
+                csatRating: csatRating,
+                csat_rating: contact.csat_rating,
+                satisfaction_rating: contact.satisfaction_rating,
+                rating: contact.rating,
+                custom_fields: contact.custom_fields,
+                contactData: contact
+            });
+
+            // Get sentiment information from CSAT rating
+            let sentiment = getSentimentFromCSAT(csatRating);
+
+            // If no sentiment, create a placeholder
+            if (!sentiment.emoji) {
+                sentiment = {
+                    emoji: `<img src="https://res.cloudinary.com/doznvxtja/image/upload/v1749125620/Untitled_design_16_wyiipc.svg" class="sentiment-placeholder-img" alt="No rating">`,
+                    description: 'No rating yet',
+                    isPlaceholder: true
+                };
+            }
+
+            console.log(`Sentiment for ${name}:`, sentiment);
+
+            // Check if this contact is the ticket requester
+            const isTicketRequester = currentTicketRequesterId && (parseInt(id) === parseInt(currentTicketRequesterId));
+
+            // Format dates
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                try {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    return dateString;
+                }
+            };
+
+            // Determine if this is a rostering contact for special styling
+            const isRosteringContact = role && role.toLowerCase().includes('rostering contact');
+            const roleBadgeClass = isRosteringContact ? 'role-badge rostering-contact' : 'role-badge';
+
+            // Determine sentiment class for styling
+            let sentimentClass = '';
+            if (csatRating) {
+                const rating = parseInt(csatRating);
+                if (rating > 0 || rating === 1) { // Positive ratings (101-103) or Classic Happy (1)
+                    sentimentClass = 'sentiment-positive';
+                } else if (rating < 0 || rating === 3) { // Negative ratings (-101 to -103) or Classic Unhappy (3)
+                    sentimentClass = 'sentiment-negative';
+                } else { // Neutral (100 or 2)
+                    sentimentClass = 'sentiment-neutral';
+                }
+            } else {
+                // No rating - use placeholder styling
+                sentimentClass = 'sentiment-placeholder';
+            }
+
+            // Add ticket requester class if this contact is the requester
+            const cardClasses = `contact-card${isTicketRequester ? ' ticket-requester' : ''}`;
+
+            return `
+                <div class="${cardClasses}">
+                    ${isTicketRequester ? `
+                        <div class="ticket-requester-badge">🎫 TICKET REQUESTER</div>
+                    ` : ''}
+                    ${role ? `
+                        <div class="role-badge-corner ${isRosteringContact ? 'rostering-contact' : ''}">${role}</div>
+                    ` : ''}
+                    
+                    <div class="contact-header">
+                        <div class="contact-name-section">
+                            <span class="icon">${isTicketRequester ? '🎫' : '👤'}</span>
+                            <span class="contact-name">
+                                <a href="#" class="contact-link" onclick="openContactDetails('${id}'); return false;">${name}</a>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="email-role-section">
+                        ${email !== 'N/A' ? `
+                            <div class="email-section">
+                                <span class="icon">📋</span>
+                                <span class="clickable-email" onclick="copyToClipboard('${email}'); return false;" title="Click to copy email">${email}</span>
+                            </div>
+                        ` : '<div></div>'}
+                        <span class="contact-sentiment ${sentimentClass}" title="Customer Satisfaction: ${sentiment.description}${csatRating ? ` (Rating: ${csatRating})` : ''}">
+                            ${sentiment.isPlaceholder ? sentiment.emoji : `<span class="sentiment-emoji">${sentiment.emoji}</span>`}
+                        </span>
+                    </div>
+                    
+                    <div class="contact-detail">
+                        <div class="detail-left">
+                            <span class="icon">🏫</span>
+                            <span>${school || 'N/A'}</span>
+                        </div>
+                        ${sentiment.isPlaceholder ? `<span class="sentiment-placeholder-text">${sentiment.description}</span>` : ''}
+                    </div>
+                    
+                    <div class="contact-footer">
+                        <div class="contact-id">
+                            <span class="icon">🆔</span>
+                            <a href="#" class="contact-link" onclick="openContactDetails('${id}'); return false;">${id}</a>
+                        </div>
+                        <div class="school-text">
+                            ${updatedAt ? `📅 Updated: ${formatDate(updatedAt)}` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const contentDiv = document.getElementById('contactsContent');
+            contentDiv.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">⚠️</div>
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        async function copyToClipboard(text) {
+            let copySuccess = false;
+
+            // Try modern Clipboard API first
+            try {
+                await navigator.clipboard.writeText(text);
+                copySuccess = true;
+            } catch (error) {
+                console.log('Clipboard API failed, trying fallback method:', error);
+
+                // Fallback method using textarea and execCommand
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    textArea.style.opacity = '0';
+                    textArea.setAttribute('readonly', '');
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    textArea.setSelectionRange(0, 99999); // For mobile devices
+
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+
+                    console.log('execCommand copy result:', successful);
+                    if (successful) {
+                        copySuccess = true;
+                        console.log('Copy successful via execCommand fallback');
+                    } else {
+                        console.error('execCommand copy returned false');
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback copy method failed:', fallbackError);
+                }
+            }
+
+            // Show notification
+            if (copySuccess) {
+                showSimpleNotification(`Email "${text}" copied to clipboard!`, 'success');
+            } else {
+                // If all copy methods fail, show the email in a modal for manual copying
+                showEmailForManualCopy(text);
+            }
+        }
+
+        function showSimpleNotification(message, type) {
+            // Try Freshdesk interface first
+            try {
+                if (client && client.interface) {
+                    client.interface.trigger("showNotify", {
+                        type: type,
+                        title: type === 'success' ? "Email Copied" : "Copy Failed",
+                        message: message
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.log('Freshdesk interface not available:', error);
+            }
+
+            // Fallback to simple alert or console
+            if (type === 'success') {
+                // Create a simple visual notification
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4caf50;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 4px;
+                    z-index: 10000;
+                    font-size: 14px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                `;
+                document.body.appendChild(notification);
+
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3000);
+            } else {
+                // For errors, show alert as last resort
+                alert(message);
+            }
+        }
+
+        function showEmailForManualCopy(email) {
+            // Create a modal-like overlay for manual copying
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 10001;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            `;
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                max-width: 500px;
+                width: 90%;
+                text-align: center;
+            `;
+
+            modal.innerHTML = `
+                <h3 style="margin-top: 0; color: #333;">Copy Email Address</h3>
+                <p style="color: #666; margin-bottom: 20px;">Please manually select and copy the email address below:</p>
+                <div style="
+                    background: #f5f5f5;
+                    border: 2px dashed #ccc;
+                    padding: 15px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-size: 16px;
+                    color: #333;
+                    margin-bottom: 20px;
+                    user-select: all;
+                    cursor: text;
+                " onclick="this.focus(); this.select();">${email}</div>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: #2196F3;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">Close</button>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Close when clicking outside the modal
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                }
+            });
+        }
+
+        function openContactDetails(contactId) {
+            try {
+                // Open contact details in a new tab/window using Freshdesk URL pattern
+                const contactUrl = `/a/contacts/${contactId}`;
+                if (client && client.interface) {
+                    // Use Freshdesk's interface to navigate
+                    client.interface.trigger("showNotify", {
+                        type: "info",
+                        title: "Opening Contact",
+                        message: `Opening contact details for ID: ${contactId}`
+                    });
+                    // Open in new tab
+                    window.open(contactUrl, '_blank');
+                } else {
+                    // Fallback
+                    window.open(contactUrl, '_blank');
+                }
+            } catch (error) {
+                console.error('Error opening contact details:', error);
+                if (client && client.interface) {
+                    client.interface.trigger("showNotify", {
+                        type: "error",
+                        title: "Navigation Error",
+                        message: "Unable to open contact details"
+                    });
+                }
+            }
+        }
+
+        async function startReplyWithCC(emailList) {
+            try {
+                console.log('Attempting to start reply with CC:', emailList);
+
+                // Close the modal first
+                if (client && client.instance) {
+                    try {
+                        await client.instance.close();
+                    } catch (closeError) {
+                        console.log('Modal close failed, continuing anyway:', closeError);
+                    }
+                }
+
+                // Small delay to ensure modal is closed
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Try to click the reply button
+                try {
+                    await client.interface.trigger("click", { id: "reply" });
+                    console.log('Reply button clicked');
+                } catch (replyError) {
+                    console.error('Failed to click reply button:', replyError);
+                    // Try alternative selectors
+                    try {
+                        await client.interface.trigger("click", { selector: "[data-test-id='reply-button']" });
+                    } catch (altError) {
+                        console.error('Alternative reply button click also failed:', altError);
+                    }
+                }
+
+                // Wait for reply editor to open
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Try to set CC field
+                try {
+                    await client.interface.trigger("setValue", {
+                        id: "cc",
+                        value: emailList
+                    });
+                    console.log('CC field populated successfully');
+                } catch (ccError) {
+                    console.error('Failed to set CC field:', ccError);
+
+                    // Try alternative methods
+                    try {
+                        // Try using selector instead of id
+                        await client.interface.trigger("setValue", {
+                            selector: "[name='cc']",
+                            value: emailList
+                        });
+                    } catch (altCcError) {
+                        // Try one more alternative
+                        try {
+                            await client.interface.trigger("setValue", {
+                                selector: "#cc_email",
+                                value: emailList
+                            });
+                        } catch (finalError) {
+                            console.error('All CC field set attempts failed:', finalError);
+                            // The emails are still in clipboard, so user can paste manually
+                        }
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error in startReplyWithCC:', error);
+                // Don't throw - we still have the emails copied to clipboard
+            }
+        }
+
+        async function copySpecialRoleEmails() {
+            try {
+                // Get all contacts with Rostering Contact or Primary Tech roles from filtered results
+                const specialRoleContacts = filteredContacts.filter(contact => {
+                    const role = contact.custom_fields?.role || '';
+                    const roleLower = role.toLowerCase();
+                    return roleLower.includes('rostering contact') || roleLower.includes('primary tech');
+                });
+
+                // Extract email addresses and filter out any empty/invalid emails
+                const emails = specialRoleContacts
+                    .map(contact => contact.email)
+                    .filter(email => email && email !== 'N/A' && email.includes('@'));
+
+                // Remove duplicates
+                const uniqueEmails = [...new Set(emails)];
+
+                if (uniqueEmails.length === 0) {
+                    showSimpleNotification('No valid email addresses found for Rostering Contacts or Primary Tech contacts', 'warning');
+                    return;
+                }
+
+                // Join emails with semicolon delimiter
+                const emailList = uniqueEmails.join('; ');
+                console.log('Attempting to copy emails:', emailList);
+
+                // Copy to clipboard
+                let copySuccess = false;
+                try {
+                    await navigator.clipboard.writeText(emailList);
+                    copySuccess = true;
+                } catch (error) {
+                    console.log('Clipboard API failed, trying fallback method:', error);
+
+                    // Fallback method
+                    try {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = emailList;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        textArea.style.top = '-999999px';
+                        textArea.style.opacity = '0';
+                        textArea.setAttribute('readonly', '');
+                        document.body.appendChild(textArea);
+
+                        // Try to preserve current selection
+                        const selected = document.getSelection().rangeCount > 0
+                            ? document.getSelection().getRangeAt(0)
+                            : false;
+
+                        textArea.focus();
+                        textArea.select();
+                        textArea.setSelectionRange(0, textArea.value.length);
+
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+
+                        // Restore previous selection if any
+                        if (selected) {
+                            document.getSelection().removeAllRanges();
+                            document.getSelection().addRange(selected);
+                        }
+
+                        if (successful) {
+                            copySuccess = true;
+                            console.log('Copy successful via execCommand fallback');
+                        } else {
+                            console.error('execCommand copy returned false');
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback copy method failed:', fallbackError);
+                    }
+                }
+
+                if (copySuccess) {
+                    try {
+                        // Try to automatically start reply and populate CC field
+                        await startReplyWithCC(emailList);
+                        showCopySuccessModal(uniqueEmails.length, specialRoleContacts);
+                    } catch (modalError) {
+                        console.error('Error showing success modal:', modalError);
+                        // Fallback to simple notification
+                        const message = `Copied ${uniqueEmails.length} email${uniqueEmails.length !== 1 ? 's' : ''} to clipboard. Paste into CC field when replying.`;
+                        showSimpleNotification(message, 'success');
+                    }
+                } else {
+                    // If all copy methods fail, show manual copy dialog
+                    console.log('All automatic copy methods failed, showing manual copy dialog');
+                    showEmailForManualCopy(emailList);
+                }
+
+            } catch (error) {
+                console.error('Error copying special role emails:', error);
+                // Try using fallback notification if Freshdesk interface not available
+                try {
+                    showSimpleNotification('Failed to copy email addresses', 'error');
+                } catch (notifyError) {
+                    alert('Failed to copy email addresses. Please try again.');
+                }
+            }
+        }
+
+        function showCopySuccessModal(emailCount, contacts) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                z-index: 10001;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                animation: fadeIn 0.2s ease;
+            `;
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                max-width: 500px;
+                width: 90%;
+                text-align: center;
+                animation: slideIn 0.3s ease;
+                position: relative;
+            `;
+
+            // Generate unique style ID first
+            const styleId = 'copy-success-modal-style-' + Date.now();
+
+            // Get role breakdown
+            const rosteringContacts = contacts.filter(c =>
+                (c.custom_fields?.role || '').toLowerCase().includes('rostering contact')
+            ).length;
+            const primaryTechContacts = contacts.filter(c =>
+                (c.custom_fields?.role || '').toLowerCase().includes('primary tech')
+            ).length;
+
+            modal.innerHTML = `
+                <div style="
+                    background: #4caf50;
+                    color: white;
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 36px;
+                    margin: 0 auto 24px auto;
+                    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+                ">✓</div>
+                
+                <h2 style="
+                    margin: 0 0 16px 0;
+                    color: #333;
+                    font-size: 24px;
+                    font-weight: 700;
+                ">Successfully Copied!</h2>
+                
+                <p style="
+                    color: #555;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin: 0 0 20px 0;
+                ">
+                    <strong>${emailCount} email${emailCount !== 1 ? 's' : ''}</strong> copied to your clipboard
+                </p>
+                
+                <div style="
+                    background: #f5f5f5;
+                    border-left: 4px solid #4caf50;
+                    padding: 16px;
+                    border-radius: 6px;
+                    text-align: left;
+                    margin-bottom: 24px;
+                ">
+                    <p style="
+                        margin: 0 0 8px 0;
+                        color: #333;
+                        font-weight: 600;
+                        font-size: 14px;
+                    ">📋 Contacts Included:</p>
+                    <ul style="
+                        margin: 0;
+                        padding-left: 20px;
+                        color: #666;
+                        font-size: 14px;
+                        line-height: 1.8;
+                    ">
+                        ${rosteringContacts > 0 ? `<li>${rosteringContacts} Rostering Contact${rosteringContacts !== 1 ? 's' : ''}</li>` : ''}
+                        ${primaryTechContacts > 0 ? `<li>${primaryTechContacts} Primary Tech${primaryTechContacts !== 1 ? 's' : ''}</li>` : ''}
+                    </ul>
+                </div>
+                
+                <div style="
+                    background: #e3f2fd;
+                    border: 1px solid #2196f3;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin-bottom: 24px;
+                ">
+                    <p style="
+                        margin: 0;
+                        color: #1976d2;
+                        font-weight: 600;
+                        font-size: 16px;
+                    ">
+                        <span style="font-size: 20px; vertical-align: middle;">💡</span> 
+                        What happened:
+                    </p>
+                    <p style="
+                        margin: 8px 0 0 0;
+                        color: #1565c0;
+                        font-size: 15px;
+                        line-height: 1.5;
+                    ">
+                        • Emails copied to clipboard<br>
+                        • Reply window should be opening<br>
+                        • CC field should be auto-populated<br><br>
+                        <em>If the CC field isn't populated, just paste (Ctrl+V) in the CC field.</em>
+                    </p>
+                </div>
+                
+                <button onclick="
+                    this.parentElement.parentElement.remove(); 
+                    const modalStyle = document.getElementById('${styleId}');
+                    if (modalStyle) modalStyle.remove();
+                " style="
+                    background: #2196f3;
+                    color: white;
+                    border: none;
+                    padding: 12px 32px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: 600;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+                " onmouseover="this.style.background='#1976d2'" onmouseout="this.style.background='#2196f3'">
+                    Got it!
+                </button>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Add fade in animation
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideIn {
+                    from { 
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                    to { 
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Close when clicking outside the modal
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                    const modalStyle = document.getElementById(styleId);
+                    if (modalStyle) modalStyle.remove();
+                }
+            });
+
+            // Auto-close after 8 seconds
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.remove();
+                    const modalStyle = document.getElementById(styleId);
+                    if (modalStyle) modalStyle.remove();
+                }
+            }, 8000);
+        }
+    </script>
+</body>
+
+</html>

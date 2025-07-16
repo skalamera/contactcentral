@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <title>Rostering & Primary Tech Contacts</title>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script async src="https://cdn.freshdev.io/assets/app-client@2.js"></script>
+  <link rel="stylesheet" type="text/css" href="styles/style.css" />
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 12px 12px 100px 12px;
+      background-color: #f8f9fa;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .header h1 {
+      color: #333;
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .header-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .filters-container {
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .filter-label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.8rem;
+    }
+
+    .filter-select {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      background: white;
+      cursor: pointer;
+    }
+
+    .actions-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .check-all-btn {
+      padding: 6px 12px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .check-all-btn:hover {
+      background: #e9ecef;
+      border-color: #ced4da;
+    }
+
+    .add-to-cc-btn {
+      padding: 8px 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: none;
+      white-space: nowrap;
+    }
+
+    .add-to-cc-btn:hover {
+      background: #45a049;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .add-to-cc-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .contacts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .contact-card {
+      background: white;
+      border-radius: 6px;
+      padding: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e1e5e9;
+      transition: all 0.2s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .contact-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .contact-card.selected {
+      border-color: #4caf50;
+      background: #f8fff8;
+    }
+
+    .contact-card.ticket-requester {
+      border: 2px solid #2196f3;
+      background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+      padding-top: 36px;
+    }
+
+    .contact-checkbox {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .contact-content {
+      margin-left: 28px;
+    }
+
+    .contact-card.ticket-requester .contact-content {
+      margin-top: 0;
+      margin-left: 0;
+    }
+
+    .contact-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .contact-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .role-badge {
+      background: #12344d;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .role-badge.primary-tech {
+      background: #ff9800;
+    }
+
+    .ticket-requester-badge {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: #2196f3;
+      color: white;
+      padding: 4px 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 6px 0 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+    }
+
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      color: #555;
+      font-size: 0.8rem;
+    }
+
+    .icon {
+      font-size: 0.9rem;
+      width: 16px;
+      text-align: center;
+      color: #666;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2196F3;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    .stats-bar {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      color: #666;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+
+    .section-separator {
+      margin: 16px 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .section-separator h3 {
+      background: #f8f9fa;
+      display: inline-block;
+      padding: 0 16px;
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #495057;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-separator::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #dee2e6;
+      z-index: 0;
+    }
+
+    .requester-section {
+      margin-bottom: 32px;
+    }
+
+    .no-requester-message {
+      background: #f8f9fa;
+      border: 1px dashed #dee2e6;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      margin-bottom: 24px;
+    }
+
+    /* Collapsible Section Styles */
+    .section-container {
+      background: white;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: #10a983;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #dee2e6;
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+
+    .section-header:hover {
+      background: #0e9474;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toggle-icon {
+      font-size: 0.9rem;
+      transition: transform 0.3s ease;
+      color: white;
+    }
+
+    .toggle-icon.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .section-content {
+      padding: 16px;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      overflow: hidden;
+      max-height: 2000px;
+      /* Large enough to accommodate content */
+    }
+
+    .section-content.collapsed {
+      max-height: 0;
+      padding: 0 16px;
+    }
+
+    /* Floating CC Button */
+    .floating-cc-button {
+      position: fixed;
+      bottom: 20px;
+      right: 16px;
+      z-index: 1000;
+      animation: slideInUp 0.3s ease-out;
+    }
+
+    .floating-add-to-cc-btn {
+      padding: 12px 18px;
+      background: #10a983;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(16, 169, 131, 0.4);
+      white-space: nowrap;
+      min-width: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .floating-add-to-cc-btn:hover {
+      background: #0e9474;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(16, 169, 131, 0.5);
+    }
+
+    .floating-add-to-cc-btn:active {
+      transform: translateY(0);
+    }
+
+    .floating-add-to-cc-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    @keyframes slideInUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOutDown {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+    }
+
+    .floating-cc-button.hiding {
+      animation: slideOutDown 0.3s ease-in forwards;
+    }
+
+    /* Responsive design for floating button */
+    @media (max-width: 768px) {
+      .floating-cc-button {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        right: 16px;
+      }
+
+      .floating-add-to-cc-btn {
+        width: 100%;
+        min-width: auto;
+        padding: 14px 20px;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .floating-add-to-cc-btn {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+      }
+
+      .button-icon {
+        display: none;
+      }
+    }
+
+    /* Internal Section Styles */
+    .internal-groups-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .internal-group {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .internal-group-header {
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .internal-group-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+
+
+    .internal-contacts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .internal-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #e1e5e9;
+      transition: all 0.2s ease;
+    }
+
+    .internal-contact-item:hover {
+      background: #f8fff8;
+      border-color: #4caf50;
+    }
+
+    .internal-contact-item.selected {
+      background: #f8fff8;
+      border-color: #4caf50;
+    }
+
+    .internal-contact-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .internal-contact-name {
+      font-weight: 500;
+      color: #333;
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .internal-contact-email {
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .internal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .internal-check-all-global {
+      padding: 6px 12px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .internal-check-all-global:hover {
+      background: #e9ecef;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>
+      <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64"
+        zoomAndPan="magnify" viewBox="0 0 48 48" height="64" preserveAspectRatio="xMidYMid meet" version="1.2">
+        <defs>
+          <clipPath id="1c691fb810">
+            <path
+              d="M 0.488281 13.199219 L 26.9375 13.199219 L 26.9375 46.996094 L 0.488281 46.996094 Z M 0.488281 13.199219 " />
+          </clipPath>
+          <clipPath id="f981632be5">
+            <path d="M 32 0 L 47.507812 0 L 47.507812 18 L 32 18 Z M 32 0 " />
+          </clipPath>
+        </defs>
+        <g id="bd31965afc">
+          <g clip-rule="nonzero" clip-path="url(#1c691fb810)">
+            <path style=" stroke:none;fill-rule:evenodd;fill:#10a983;fill-opacity:1;"
+              d="M 26.679688 44.4375 C 26.679688 35.421875 20.8125 28.117188 13.585938 28.117188 C 6.355469 28.117188 0.488281 35.421875 0.488281 44.4375 C 0.488281 45.84375 6.355469 46.988281 13.585938 46.988281 C 20.8125 46.988281 26.679688 45.84375 26.679688 44.4375 Z M 13.585938 13.207031 C 17.527344 13.207031 20.71875 16.398438 20.71875 20.339844 C 20.71875 24.285156 17.527344 27.476562 13.585938 27.476562 C 9.644531 27.476562 6.449219 24.285156 6.449219 20.339844 C 6.449219 16.398438 9.644531 13.207031 13.585938 13.207031 Z M 13.585938 13.207031 " />
+          </g>
+          <g style="fill:#10a983;fill-opacity:1;">
+            <g transform="translate(16.901326, 17.266198)">
+              <path style="stroke:none"
+                d="M 10.125 -3.453125 C 10.707031 -3.453125 11.269531 -3.535156 11.8125 -3.703125 C 12.363281 -3.878906 12.765625 -4.050781 13.015625 -4.21875 L 13.40625 -4.484375 L 15.03125 -1.234375 C 14.976562 -1.191406 14.898438 -1.132812 14.796875 -1.0625 C 14.703125 -1 14.484375 -0.875 14.140625 -0.6875 C 13.796875 -0.507812 13.425781 -0.351562 13.03125 -0.21875 C 12.644531 -0.0820312 12.132812 0.0351562 11.5 0.140625 C 10.863281 0.242188 10.207031 0.296875 9.53125 0.296875 C 7.976562 0.296875 6.503906 -0.0820312 5.109375 -0.84375 C 3.710938 -1.601562 2.585938 -2.648438 1.734375 -3.984375 C 0.890625 -5.328125 0.46875 -6.773438 0.46875 -8.328125 C 0.46875 -9.503906 0.71875 -10.632812 1.21875 -11.71875 C 1.71875 -12.800781 2.382812 -13.726562 3.21875 -14.5 C 4.050781 -15.269531 5.019531 -15.882812 6.125 -16.34375 C 7.226562 -16.800781 8.363281 -17.03125 9.53125 -17.03125 C 10.613281 -17.03125 11.609375 -16.898438 12.515625 -16.640625 C 13.429688 -16.390625 14.078125 -16.132812 14.453125 -15.875 L 15.03125 -15.5 L 13.40625 -12.25 C 13.3125 -12.332031 13.171875 -12.429688 12.984375 -12.546875 C 12.796875 -12.660156 12.414062 -12.8125 11.84375 -13 C 11.28125 -13.1875 10.707031 -13.28125 10.125 -13.28125 C 9.195312 -13.28125 8.367188 -13.128906 7.640625 -12.828125 C 6.910156 -12.535156 6.332031 -12.144531 5.90625 -11.65625 C 5.476562 -11.175781 5.15625 -10.65625 4.9375 -10.09375 C 4.71875 -9.53125 4.609375 -8.957031 4.609375 -8.375 C 4.609375 -7.101562 5.082031 -5.960938 6.03125 -4.953125 C 6.988281 -3.953125 8.351562 -3.453125 10.125 -3.453125 Z M 10.125 -3.453125 " />
+            </g>
+          </g>
+          <g clip-rule="nonzero" clip-path="url(#f981632be5)">
+            <g style="fill:#10a983;fill-opacity:1;">
+              <g transform="translate(32.165848, 17.266198)">
+                <path style="stroke:none"
+                  d="M 10.125 -3.453125 C 10.707031 -3.453125 11.269531 -3.535156 11.8125 -3.703125 C 12.363281 -3.878906 12.765625 -4.050781 13.015625 -4.21875 L 13.40625 -4.484375 L 15.03125 -1.234375 C 14.976562 -1.191406 14.898438 -1.132812 14.796875 -1.0625 C 14.703125 -1 14.484375 -0.875 14.140625 -0.6875 C 13.796875 -0.507812 13.425781 -0.351562 13.03125 -0.21875 C 12.644531 -0.0820312 12.132812 0.0351562 11.5 0.140625 C 10.863281 0.242188 10.207031 0.296875 9.53125 0.296875 C 7.976562 0.296875 6.503906 -0.0820312 5.109375 -0.84375 C 3.710938 -1.601562 2.585938 -2.648438 1.734375 -3.984375 C 0.890625 -5.328125 0.46875 -6.773438 0.46875 -8.328125 C 0.46875 -9.503906 0.71875 -10.632812 1.21875 -11.71875 C 1.71875 -12.800781 2.382812 -13.726562 3.21875 -14.5 C 4.050781 -15.269531 5.019531 -15.882812 6.125 -16.34375 C 7.226562 -16.800781 8.363281 -17.03125 9.53125 -17.03125 C 10.613281 -17.03125 11.609375 -16.898438 12.515625 -16.640625 C 13.429688 -16.390625 14.078125 -16.132812 14.453125 -15.875 L 15.03125 -15.5 L 13.40625 -12.25 C 13.3125 -12.332031 13.171875 -12.429688 12.984375 -12.546875 C 12.796875 -12.660156 12.414062 -12.8125 11.84375 -13 C 11.28125 -13.1875 10.707031 -13.28125 10.125 -13.28125 C 9.195312 -13.28125 8.367188 -13.128906 7.640625 -12.828125 C 6.910156 -12.535156 6.332031 -12.144531 5.90625 -11.65625 C 5.476562 -11.175781 5.15625 -10.65625 4.9375 -10.09375 C 4.71875 -9.53125 4.609375 -8.957031 4.609375 -8.375 C 4.609375 -7.101562 5.082031 -5.960938 6.03125 -4.953125 C 6.988281 -3.953125 8.351562 -3.453125 10.125 -3.453125 Z M 10.125 -3.453125 " />
+              </g>
+            </g>
+          </g>
+        </g>
+      </svg>
+      Contact Central
+    </h1>
+  </div>
+
+  <!-- Floating Add to CC Button -->
+  <div id="floatingCcButton" class="floating-cc-button" style="display: none;">
+    <button id="globalAddToCcBtn" class="floating-add-to-cc-btn" onclick="addSelectedToCC()">
+      <span class="button-icon">📧</span>
+      <span class="button-text">Add to CC List</span>
+    </button>
+  </div>
+
+  <!-- External Section -->
+  <div class="section-container">
+    <div class="section-header" onclick="toggleSection('external')">
+      <h2>External - Rostering Contacts <span id="externalToggle" class="toggle-icon">▼</span></h2>
+    </div>
+    <div id="externalSection" class="section-content">
+      <div id="filtersSection">
+        <div class="filters-container">
+          <div class="filter-group">
+            <label class="filter-label">Filter by Role:</label>
+            <select id="roleFilter" class="filter-select" onchange="applyFilters()">
+              <option value="">All Roles</option>
+              <option value="rostering contact">Rostering Contacts</option>
+              <option value="primary tech">Primary Tech</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Filter by School:</label>
+            <select id="schoolFilter" class="filter-select" onchange="applyFilters()">
+              <option value="">All Schools</option>
+            </select>
+          </div>
+          <div class="actions-container">
+            <button id="checkAllBtn" class="check-all-btn" onclick="toggleCheckAll()">
+              Check All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="statsBar" class="stats-bar" style="display: none;"></div>
+
+      <div id="contactsContent">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading contacts...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Internal Section -->
+  <div class="section-container">
+    <div class="section-header" onclick="toggleSection('internal')">
+      <h2>Internal <span id="internalToggle" class="toggle-icon">▼</span></h2>
+    </div>
+    <div id="internalSection" class="section-content">
+      <div id="internalContent">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading internal contacts...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+<script defer src="scripts/app.js"></script>
+<script async type="module"
+  src="https://cdn.jsdelivr.net/npm/@freshworks/crayons@3/dist/crayons/crayons.esm.js"></script>
+<script async nomodule src="https://cdn.jsdelivr.net/npm/@freshworks/crayons@3/dist/crayons/crayons.js"></script>
+
+</html>

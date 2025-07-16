@@ -1,0 +1,132 @@
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:after,
+*::before {
+  box-sizing: inherit;
+}
+
+.main {
+  display: flex;
+  flex-flow: column wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contact count link styling */
+.contact-count-link {
+  color: #2196F3;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.contact-count-link:hover {
+  color: #1976D2;
+}
+
+/* Main Container */
+.contact-filter-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px;
+  background: #ffffff;
+  gap: 5px;
+}
+
+/* Rostering Contact Section */
+.requester-role-section {
+  text-align: center;
+  margin-bottom: 0px;
+}
+
+.rostering-icon {
+  width: 40px;
+  height: 45px;
+  margin-bottom: 0px;
+  margin-top: 1px;
+}
+
+.rostering-text {
+  font-size: 11px;
+  font-weight: 900;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+  line-height: 1;
+  font-family: Arial, sans-serif;
+}
+
+/* Action Buttons Styling */
+.action-btn {
+  background: #3a5775;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+  letter-spacing: 0.5px;
+  position: relative;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 280px;
+  margin: 0px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+
+.action-btn:hover {
+  background: #2d4559;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+  background: #253848;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.launch-btn {
+  padding: 3px 3px;
+  width: 180px;
+}
+
+.refresh-btn {
+  margin-bottom: 10px;
+  padding: 3px 3px;
+  width: 180px;
+}
+
+.copy-emails-btn {
+  margin-bottom: 10px;
+  padding: 3px 3px;
+  width: 280px;
+}
+
+/* Primary Tech Section (for future use) */
+.primary-tech-text {
+  font-size: 32px;
+  font-weight: 900;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  line-height: 1.2;
+}
